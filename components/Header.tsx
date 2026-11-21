@@ -3,19 +3,20 @@
 import React from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
+import { User } from 'lucide-react';
 
 export default function Header() {
   const { setIsMenuOpen, setIsCartOpen, cartCount, playSound } = useCart();
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#05070b]/95 backdrop-blur-md border-b border-white/5 px-6 md:px-12 py-4 flex items-center justify-between select-none">
+    <header className="sticky top-0 z-40 w-full bg-[#05070b]/95 backdrop-blur-md border-b border-white/5 px-4 sm:px-8 md:px-12 py-3.5 flex items-center justify-between select-none">
       {/* Menu Trigger */}
       <button
         onClick={() => {
           playSound('click');
           setIsMenuOpen(true);
         }}
-        className="font-anton text-lg md:text-xl tracking-wider uppercase text-[#dfb86c] hover:text-white transition-colors"
+        className="font-anton text-base sm:text-lg md:text-xl tracking-wider uppercase text-[#dfb86c] hover:text-white transition-colors"
         aria-label="Open Navigation Menu"
       >
         MENU
@@ -32,22 +33,35 @@ export default function Header() {
         </div>
       </Link>
 
-      {/* Cart Trigger */}
-      <button
-        onClick={() => {
-          playSound('click');
-          setIsCartOpen(true);
-        }}
-        className="flex items-center gap-2 font-anton text-lg md:text-xl tracking-wider uppercase text-[#dfb86c] hover:text-white transition-colors"
-        aria-label="Open Cart"
-      >
-        <span>CART</span>
-        {cartCount > 0 && (
-          <span className="w-5 h-5 rounded-full bg-[#dfb86c] text-black text-xs font-mono font-bold flex items-center justify-center">
-            {cartCount}
-          </span>
-        )}
-      </button>
+      {/* Right Controls: Account & Cart */}
+      <div className="flex items-center gap-4 sm:gap-6">
+        <Link
+          href="/account"
+          onClick={() => playSound('click')}
+          className="flex items-center gap-1.5 font-anton text-base sm:text-lg md:text-xl tracking-wider uppercase text-[#dfb86c] hover:text-white transition-colors"
+          title="Customer Account"
+        >
+          <User className="w-4 h-4 text-[#dfb86c]" />
+          <span className="hidden sm:inline">ACCOUNT</span>
+        </Link>
+
+        {/* Cart Trigger */}
+        <button
+          onClick={() => {
+            playSound('click');
+            setIsCartOpen(true);
+          }}
+          className="flex items-center gap-2 font-anton text-base sm:text-lg md:text-xl tracking-wider uppercase text-[#dfb86c] hover:text-white transition-colors"
+          aria-label="Open Cart"
+        >
+          <span>CART</span>
+          {cartCount > 0 && (
+            <span className="w-5 h-5 rounded-full bg-[#dfb86c] text-black text-xs font-mono font-bold flex items-center justify-center">
+              {cartCount}
+            </span>
+          )}
+        </button>
+      </div>
     </header>
   );
 }

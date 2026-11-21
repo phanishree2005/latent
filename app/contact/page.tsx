@@ -3,26 +3,43 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Footer from '@/components/Footer';
-import { ArrowLeft, Mail, MessageSquare, Send, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Mail, MessageSquare, Send, CheckCircle2, Loader2 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 
 export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [form, setForm] = useState({ name: '', email: '', orderId: '', message: '' });
   const { playSound } = useCart();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    playSound('success');
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
+    setErrorMessage('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to submit query');
+
+      playSound('success');
+      setSubmitted(true);
       setForm({ name: '', email: '', orderId: '', message: '' });
-    }, 4000);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Error transmitting message');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="w-full flex flex-col bg-[#08090b] text-white">
+    <div className="w-full flex flex-col bg-[#05070b] text-white">
       <div className="max-w-4xl mx-auto w-full px-4 md:px-8 py-16">
         <Link
           href="/"
@@ -35,7 +52,7 @@ export default function ContactPage() {
         <span className="text-crimson font-mono text-xs font-bold uppercase tracking-widest block mb-2">
           GET IN TOUCH
         </span>
-        <h1 className="text-4xl sm:text-5xl font-black uppercase tracking-tight text-white mb-8 border-b border-borderDark pb-6">
+        <h1 className="font-anton text-4xl sm:text-5xl uppercase tracking-wider text-[#dfb86c] mb-8 border-b border-borderDark pb-6">
           CONTACT US
         </h1>
 
@@ -51,7 +68,7 @@ export default function ContactPage() {
                 <Mail className="w-5 h-5 text-crimson shrink-0" />
                 <div>
                   <span className="text-[10px] text-white/40 uppercase block">EMAIL SUPPORT</span>
-                  <a href="mailto:support@samayraina.co" className="text-white hover:text-accentYellow font-bold">
+                  <a href="mailto:support@samayraina.co" className="text-white hover:text-[#dfb86c] font-bold">
                     support@samayraina.co
                   </a>
                 </div>
@@ -73,17 +90,29 @@ export default function ContactPage() {
 
           {/* Contact Form */}
           <div className="bg-surface border border-borderDark p-6 md:p-8">
-            <h3 className="text-base font-bold text-white uppercase font-mono mb-4">
+            <h3 className="font-anton text-base uppercase text-[#dfb86c] mb-4">
               SEND US A MESSAGE
             </h3>
+
+            {errorMessage && (
+              <div className="mb-4 p-3 bg-crimson/20 border border-crimson text-crimson text-xs font-mono">
+                {errorMessage}
+              </div>
+            )}
 
             {submitted ? (
               <div className="py-12 text-center font-mono">
                 <CheckCircle2 className="w-12 h-12 text-green-400 mx-auto mb-3" />
                 <h4 className="text-lg font-bold uppercase text-white mb-1">MESSAGE TRANSMITTED</h4>
-                <p className="text-xs text-white/60">
+                <p className="text-xs text-white/60 mb-6">
                   We have logged your query and will get back to you shortly.
                 </p>
+                <button
+                  onClick={() => setSubmitted(false)}
+                  className="px-6 py-2.5 bg-[#dfb86c] text-black font-anton uppercase text-xs"
+                >
+                  SEND ANOTHER
+                </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4 font-mono text-xs">
@@ -94,7 +123,7 @@ export default function ContactPage() {
                     required
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-black/60 border border-borderDark text-white outline-none focus:border-white"
+                    className="w-full px-3 py-2.5 bg-black/60 border border-borderDark text-white outline-none focus:border-[#dfb86c]"
                     placeholder="e.g. Balraj Ghai"
                   />
                 </div>
@@ -106,7 +135,7 @@ export default function ContactPage() {
                     required
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-black/60 border border-borderDark text-white outline-none focus:border-white"
+                    className="w-full px-3 py-2.5 bg-black/60 border border-borderDark text-white outline-none focus:border-[#dfb86c]"
                     placeholder="balraj@habitat.in"
                   />
                 </div>
@@ -117,8 +146,8 @@ export default function ContactPage() {
                     type="text"
                     value={form.orderId}
                     onChange={(e) => setForm({ ...form, orderId: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-black/60 border border-borderDark text-white outline-none focus:border-white"
-                    placeholder="#IGL-8942"
+                    className="w-full px-3 py-2.5 bg-black/60 border border-borderDark text-white outline-none focus:border-[#dfb86c]"
+                    placeholder="#IGL-894211"
                   />
                 </div>
 
@@ -129,17 +158,27 @@ export default function ContactPage() {
                     required
                     value={form.message}
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-black/60 border border-borderDark text-white outline-none focus:border-white resize-none"
+                    className="w-full px-3 py-2.5 bg-black/60 border border-borderDark text-white outline-none focus:border-[#dfb86c] resize-none"
                     placeholder="How can we help?"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-3.5 bg-crimson hover:bg-bloodRed text-white font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors"
+                  disabled={loading}
+                  className="w-full py-3.5 bg-[#dfb86c] hover:bg-[#f0cf85] text-black font-anton text-sm tracking-wider uppercase flex items-center justify-center gap-2 transition-colors"
                 >
-                  <span>SEND TRANSMISSION</span>
-                  <Send className="w-3.5 h-3.5" />
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>TRANSMITTING...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>SEND TRANSMISSION</span>
+                      <Send className="w-3.5 h-3.5" />
+                    </>
+                  )}
                 </button>
               </form>
             )}
