@@ -25,11 +25,11 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({
             valid: false,
             message: `Minimum order of ₹${coupon.min_order_amount} required for this coupon`,
-          });
+          }, { status: 400 });
         }
 
         if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
-          return NextResponse.json({ valid: false, message: 'This coupon has expired' });
+          return NextResponse.json({ valid: false, message: 'This coupon has expired' }, { status: 400 });
         }
 
         let discount = 0;
@@ -54,8 +54,11 @@ export async function POST(req: NextRequest) {
       // Fallback to static coupons if Supabase is still connecting
     }
 
-    // 2. Fallback in-memory coupons
+    // 2. Fallback in-memory coupons with strict threshold enforcement
     if (normalizedCode === 'LATENT10') {
+      if (subtotal < 499) {
+        return NextResponse.json({ valid: false, message: 'Minimum order of ₹499 required for LATENT10' }, { status: 400 });
+      }
       const discount = Math.round(subtotal * 0.1);
       return NextResponse.json({
         valid: true,
@@ -67,6 +70,9 @@ export async function POST(req: NextRequest) {
     }
 
     if (normalizedCode === 'RHINO20') {
+      if (subtotal < 999) {
+        return NextResponse.json({ valid: false, message: 'Minimum order of ₹999 required for RHINO20' }, { status: 400 });
+      }
       const discount = Math.round(subtotal * 0.2);
       return NextResponse.json({
         valid: true,
@@ -78,6 +84,9 @@ export async function POST(req: NextRequest) {
     }
 
     if (normalizedCode === 'SUPREMELEADER') {
+      if (subtotal < 799) {
+        return NextResponse.json({ valid: false, message: 'Minimum order of ₹799 required for SUPREMELEADER' }, { status: 400 });
+      }
       const discount = Math.round(subtotal * 0.15);
       return NextResponse.json({
         valid: true,

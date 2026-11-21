@@ -1,8 +1,28 @@
 import React from 'react';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { getCurrentUser, getUserRole } from '@/lib/auth';
 import { LayoutDashboard, ShoppingBag, ShoppingCart, Users, Tag, ArrowLeft, ShieldAlert } from 'lucide-react';
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  // 1. Server-side Authentication & Role Verification Guard
+  const user = await getCurrentUser();
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const isLiveSupabase = supabaseUrl && !supabaseUrl.includes('placeholder');
+
+  // If live Supabase is configured and user is unauthenticated, redirect to login
+  if (!user && isLiveSupabase) {
+    redirect('/login?redirectTo=/admin');
+  }
+
+  // If user is authenticated, ensure their role is strictly 'admin'
+  if (user) {
+    const role = await getUserRole(user.id);
+    if (role !== 'admin') {
+      redirect('/account?error=unauthorized_admin');
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#07080a] text-white flex flex-col md:flex-row font-mono">
       {/* Sidebar */}

@@ -4,9 +4,9 @@ import { cookies } from 'next/headers';
 export const createClient = () => {
   const cookieStore = cookies();
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_1JeJsZsaGfliFcmiDH0HJA_utAKh7mX';
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-  return createServerClient(supabaseUrl, supabaseKey, {
+  return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       get(name: string) {
         return cookieStore.get(name)?.value;
@@ -15,14 +15,14 @@ export const createClient = () => {
         try {
           cookieStore.set({ name, value, ...options });
         } catch (error) {
-          // Handled for server components
+          // Handled for Server Components
         }
       },
       remove(name: string, options: CookieOptions) {
         try {
           cookieStore.set({ name, value: '', ...options });
         } catch (error) {
-          // Handled for server components
+          // Handled for Server Components
         }
       },
     },

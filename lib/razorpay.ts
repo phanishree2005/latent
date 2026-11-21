@@ -2,8 +2,12 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 
 export const getRazorpayInstance = () => {
-  const key_id = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_U2qwEtvMQlXviB';
-  const key_secret = process.env.RAZORPAY_KEY_SECRET || 'OJDyBtWjQkw98wduIECOS4PW';
+  const key_id = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+  const key_secret = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!key_id || !key_secret) {
+    throw new Error('Razorpay credentials not configured. Please set NEXT_PUBLIC_RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.');
+  }
 
   return new Razorpay({
     key_id,
@@ -26,7 +30,11 @@ export const verifyPaymentSignature = ({
   signature: string;
 }): boolean => {
   try {
-    const key_secret = process.env.RAZORPAY_KEY_SECRET || 'OJDyBtWjQkw98wduIECOS4PW';
+    const key_secret = process.env.RAZORPAY_KEY_SECRET;
+    if (!key_secret) {
+      console.error('Signature verification failed: RAZORPAY_KEY_SECRET is not configured');
+      return false;
+    }
     const body = `${orderId}|${paymentId}`;
     const expectedSignature = crypto
       .createHmac('sha256', key_secret)
@@ -51,7 +59,11 @@ export const verifyWebhookSignature = ({
   signature: string;
 }): boolean => {
   try {
-    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || 'latent_secret_webhook_key_2026';
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      console.error('Webhook verification failed: RAZORPAY_WEBHOOK_SECRET is not configured');
+      return false;
+    }
     const expectedSignature = crypto
       .createHmac('sha256', webhookSecret)
       .update(body)

@@ -254,6 +254,44 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Function: Atomic decrement of variant stock and audit logging
+CREATE OR REPLACE FUNCTION public.decrement_variant_stock(
+    p_variant_id UUID,
+    p_quantity INT
+)
+RETURNS INT AS $$
+DECLARE
+    current_stock INT;
+    new_stock INT;
+BEGIN
+    SELECT stock_quantity INTO current_stock
+    FROM public.product_variants
+    WHERE id = p_variant_id
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Variant ID % not found', p_variant_id;
+    END IF;
+
+    IF current_stock < p_quantity THEN
+        RAISE EXCEPTION 'Insufficient stock for variant %: available %, requested %', p_variant_id, current_stock, p_quantity;
+    END IF;
+
+    new_stock := current_stock - p_quantity;
+
+    UPDATE public.product_variants
+    SET stock_quantity = new_stock,
+        updated_at = NOW()
+    WHERE id = p_variant_id;
+
+    -- Record atomic audit change in inventory ledger
+    INSERT INTO public.inventory (variant_id, change_amount, reason)
+    VALUES (p_variant_id, -p_quantity, 'purchase');
+
+    RETURN new_stock;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Trigger: Automatically create public.profile and customer role on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
